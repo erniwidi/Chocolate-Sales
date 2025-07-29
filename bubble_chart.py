@@ -1,9 +1,41 @@
+# Import Libraries
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import matplotlib.pyplot as plt
 import numpy as np
+
+# Import Dataset
+df = pd.read_csv("/content/Chocolate Sales.csv")
+df
+
+# Convert data type
+df['Amount'] = df['Amount'].str.replace(',', '').str.replace('$', '').str.strip().astype(int)
+
+# Convert to datetime
+df['Date'] = pd.to_datetime(df['Date'], format='%d-%b-%y')
+df['Month'] = df['Date'].dt.strftime('%b')
+
+# Define the desired order of months
+month_order = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug']
+
+# Convert 'Month' column to Categorical with specified order
+df['Month'] = pd.Categorical(df['Month'], categories=month_order, ordered=True)
+
+# Create a dictionary to map months to quarters
+month_to_quarter = {
+    'Jan': 'Q1', 'Feb': 'Q1', 'Mar': 'Q1',
+    'Apr': 'Q2', 'May': 'Q2', 'Jun': 'Q2',
+    'Jul': 'Q3', 'Aug': 'Q3'
+}
+# Drop Q3
+df = df[df['Month'] != 'Jul']
+df = df[df['Month'] != 'Aug']
+
+# Add a 'Quarter' column to the DataFrame
+df['Quarter'] = df['Month'].map(month_to_quarter)
+df
 
 # Country vs Product (TOP 3)
 # Filter data for Q2
