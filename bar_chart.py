@@ -1,3 +1,4 @@
+# Import Libraries
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -5,7 +6,9 @@ from plotly.subplots import make_subplots
 import matplotlib.pyplot as plt
 import numpy as np
 
+# Import Dataset
 df = pd.read_csv("/content/Chocolate Sales.csv")
+df
 
 # Convert data type
 df['Amount'] = df['Amount'].str.replace(',', '').str.replace('$', '').str.strip().astype(int)
@@ -34,7 +37,6 @@ df = df[df['Month'] != 'Aug']
 df['Quarter'] = df['Month'].map(month_to_quarter)
 df
 
-# Amount and Boxes Shipped by Product
 # Filter data for Q2 and Q1
 Q2_data = df[df['Quarter'] == 'Q2']
 Q1_data = df[df['Quarter'] == 'Q1']
@@ -46,15 +48,25 @@ product_data_Q1 = Q1_data.groupby('Product')[['Boxes Shipped', 'Amount']].sum().
 # Sort 
 product_data_Q2 = product_data_Q2.sort_values(by='Boxes Shipped', ascending=False)
 
-# Merge Q1 and Q2 data to calculate differences
+# Merge Q1 and Q2 data
 product_data = pd.merge(product_data_Q2, product_data_Q1, on='Product', suffixes=('_Q2', '_Q1'))
 
-# Calculate differences and percentage change from previous quarter (Q1)
-product_data['Boxes Shipped Diff'] = product_data['Boxes Shipped_Q2'] - product_data['Boxes Shipped_Q1']
-product_data['Amount Diff'] = product_data['Amount_Q2'] - product_data['Amount_Q1']
-product_data['Boxes Shipped % Change'] = (product_data['Boxes Shipped Diff'] / product_data['Boxes Shipped_Q1']) * 100
-product_data['Amount % Change'] = (product_data['Amount Diff'] / product_data['Amount_Q1']) * 100
+# Amount ($) and Boxes (unit) shipped in Q1 and Q2 
+agg_amount_Q1 = product_data['Amount_Q1'].sum()
+agg_boxes_Q1 = product_data['Boxes Shipped_Q1'].sum()
+agg_amount_Q2 = product_data['Amount_Q2'].sum()
+agg_boxes_Q2 = product_data['Boxes Shipped_Q2'].sum()
 
+# Percentage change aggregate
+amount_change = (agg_amount_Q2 - agg_amount_Q1) / agg_amount_Q1 * 100
+boxes_change = (agg_boxes_Q2 - agg_boxes_Q1) / agg_boxes_Q1 * 100
+
+print("Revenue in Q2: $", agg_amount_Q2, ",", amount_change, "% than Q1")
+print("Boxes sold in Q2: ", agg_boxes_Q2, " unit", ",", boxes_change, "% than Q1")
+
+# Percentage change Q2 per products
+product_data['Boxes Shipped % Change'] = (product_data['Boxes Shipped_Q2'] - product_data['Boxes Shipped_Q1']) / product_data['Boxes Shipped_Q1'] * 100
+product_data['Amount % Change'] = (product_data['Amount_Q2'] - product_data['Amount_Q1']) / product_data['Amount_Q1'] * 100
 
 # Create subplots with shared y-axis
 fig = make_subplots(rows=1, cols=2, shared_yaxes=True, horizontal_spacing=0.01,
@@ -78,7 +90,7 @@ fig.add_trace(go.Bar(
     marker_color='green'
 ), row=1, col=2, secondary_y=False)
 
-# Add annotations for values and differences with color formatting
+# Add annotations for values and percentage with color formatting
 for i, row in product_data.iterrows():
     # Boxes Shipped Annotation
     fig.add_annotation(
